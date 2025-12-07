@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stomach Fullness Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    background: #f4c5a6;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+/* Container that CLIPS the fill */
+.stomach-container {
+    position: relative;
+    width: 250px;
+    height: 350px;
+    margin: 20px auto;
+    overflow: hidden; /* ✅ THIS IS WHAT MAKES FILL VISIBLE INSIDE */
+}
+
+/* Blue fill */
+.stomach-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: blue;
+    z-index: 1;
+    transition: height 0.2s linear;
+}
+
+/* Stomach outline on top */
+.stomach-outline {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+input[type="range"] {
+    width: 90%;
+    margin: 25px 0;
+}
+
+.timer {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    background: #222;
+    color: white;
+    cursor: pointer;
+    margin: 5px;
+}
+
+button:active {
+    transform: scale(0.96);
+}
+</style>
+</head>
+<body>
+
+<h1>Stomach Fullness</h1>
+
+<div class="stomach-container">
+    <div id="stomachFill" class="stomach-fill"></div>
+    <img src="stomach-outline.png" class="stomach-outline">
+</div>
+
+<input 
+    id="fullnessSlider" 
+    type="range" 
+    min="0" 
+    max="100" 
+    value="0"
+>
+
+<div class="timer" id="timerDisplay">
+    0:00:00 until empty
+</div>
+
+<button onclick="startTimer()">Start</button>
+<button onclick="pauseTimer()">Pause</button>
+<button onclick="resetApp()">Reset</button>
+
+<script>
+const slider = document.getElementById("fullnessSlider");
+const fill = document.getElementById("stomachFill");
+const timerDisplay = document.getElementById("timerDisplay");
+
+const MAX_TIME = 3 * 60 * 60; // 3 hours max
+let timeRemaining = 0;
+let timer = null;
+
+// ✅ SLIDER NOW CONTROLS BOTH FILL AND TIMER
+slider.addEventListener("input", () => {
+    const percent = slider.value;
+    fill.style.height = percent + "%";
+    timeRemaining = Math.floor((percent / 100) * MAX_TIME);
+    updateTimerDisplay();
+});
+
+function startTimer() {
+    if (timer) return;
+
+    timer = setInterval(() => {
+        if (timeRemaining > 0) {
+            timeRemaining--;
+            syncSliderToTimer();
+            updateTimerDisplay();
+        } else {
+            pauseTimer();
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    clearInterval(timer);
+    timer = null;
+}
+
+function resetApp() {
+    pauseTimer();
+    timeRemaining = 0;
+    slider.value = 0;
+    fill.style.height = "0%";
+    updateTimerDisplay();
+}
+
+// ✅ TIMER DRAIN AUTOMATICALLY LOWERS SLIDER & FILL
+function syncSliderToTimer() {
+    const percent = (timeRemaining / MAX_TIME) * 100;
+    slider.value = percent;
+    fill.style.height = percent + "%";
+}
+
+function updateTimerDisplay() {
+    const hours = Math.floor(timeRemaining / 3600);
+    const minutes = Math.floor((timeRemaining % 3600) / 60);
+    const seconds = timeRemaining % 60;
+
+    timerDisplay.textContent =
+        `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")} until empty`;
+}
+
+updateTimerDisplay();
+</script>
+
+</body>
+</html>
